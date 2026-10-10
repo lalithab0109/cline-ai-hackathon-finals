@@ -29,3 +29,37 @@ uploads/
 .DS_Store
 .idea/
 .vscode/
+
+# Generated synthetic datasets
+ml/aarogya_bindu_dataset_generator/aarogya_synthetic_dataset/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Local environments and secrets
+.env
+.env.local
+.env.*.local
+.venv/
+venv/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# Build artifacts
+node_modules/
+.next/
+
+# ML training datasets (not needed for inference)
+ml/aarogya-bindu-ml/data/raw/
+ml/aarogya-bindu-ml/data/processed/
+ml/aarogya-bindu-ml/data/interim/
+
+# Generated ML caches
+*.pkl
+*.npy
+*.npz

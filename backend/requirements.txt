@@ -6,12 +6,20 @@ pydantic==2.10.4
 # Multipart form parsing for POST /api/scans/analyze image uploads.
 python-multipart==0.0.20
 
-# Image integrity validation for uploaded strip photos (the future OpenCV
-# pipeline will perform the real image analysis).
+# Upload integrity pre-check (Pillow). Real image analysis is done by the
+# OpenCV pipeline in the hemoglobin ML package below.
 pillow==12.3.0
 
-# Future iterations (declared in the project stack, installed now so the
-# environment is ready; not yet used by any code path):
-#   - SQLite persistence uses the Python standard library (sqlite3).
-#   - ReportLab will power GET /api/reports/{id}/pdf in a later iteration.
+# SQLite persistence uses the Python standard library (sqlite3).
+# ReportLab powers GET /api/reports/{id}/pdf.
 reportlab==4.2.5
+
+# --- Hemoglobin ML inference -------------------------------------------------
+# Combined environment: backend + ml/aarogya-bindu-ml/requirements-inference.txt.
+# `-r` pulls in the ML project's EXACT pins (hb_svr.joblib is a pickled
+# scikit-learn pipeline: other scikit-learn/numpy versions may fail to load it
+# or change predictions). Do not loosen these pins without retraining.
+# Requires Python >= 3.12 (numpy 2.5.3 / scipy 1.18.1). Verified: macOS arm64,
+# CPython 3.12.15. The ML pins do not overlap with, or conflict with, the web
+# pins above (checked with `pip check`).
+-r ../ml/aarogya-bindu-ml/requirements-inference.txt

@@ -9,12 +9,14 @@ from fastapi import APIRouter, HTTPException, Response
 from .. import database
 from ..config import SIMULATION_DISCLAIMER
 from ..schemas import (
+    AssistantContextResponse,
     ModelDescriptor,
     ReportPatient,
     ScanAnalysisResponse,
     ScreeningReportResponse,
 )
 from ..services import pdf_service
+from ..services.assistant_context import build_assistant_context
 from .tests import SUPPORTED_TESTS
 
 router = APIRouter(tags=["reports"])
@@ -68,6 +70,21 @@ def get_report(report_id: str) -> ScreeningReportResponse:
     """Retrieve a structured screening report (404 when unknown)."""
 
     return _load_report(report_id)
+
+
+@router.get(
+    "/reports/{report_id}/assistant-context",
+    response_model=AssistantContextResponse,
+    summary="De-identified report summary for the Aarogya AI assistant",
+)
+def get_assistant_context(report_id: str) -> AssistantContextResponse:
+    """Minimal, de-identified grounding data for one saved report (404 when unknown).
+
+    No authentication exists in this demo: access is equivalent to
+    GET /api/reports/{id}. Intended for fictional demonstration records only.
+    """
+
+    return build_assistant_context(_load_report(report_id))
 
 
 @router.get(

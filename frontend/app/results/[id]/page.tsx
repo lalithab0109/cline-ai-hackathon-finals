@@ -11,6 +11,7 @@ import ExplainabilityPanel from "@/components/results/ExplainabilityPanel";
 import ImageAnalysisCard from "@/components/results/ImageAnalysisCard";
 import MeasurementCard from "@/components/results/MeasurementCard";
 import ReportActions from "@/components/results/ReportActions";
+import ReportAssistant from "@/components/results/ReportAssistant";
 import ReportHeader from "@/components/results/ReportHeader";
 import { ApiError, getReport } from "@/lib/api";
 import type { ScreeningReportResponse } from "@/lib/types";
@@ -90,6 +91,7 @@ export default function ResultsPage() {
             </div>
             <ImageAnalysisCard analysis={state.report.analysis} />
             <ExplainabilityPanel report={state.report} />
+            <ReportAssistant report={state.report} />
             <ReportActions reportId={state.report.report_id} />
             <p className="text-center text-xs leading-relaxed text-slate-400">
               {state.report.disclaimer}. This demonstration report cannot

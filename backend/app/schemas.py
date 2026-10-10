@@ -61,7 +61,9 @@ class HealthResponse(BaseModel):
     status: Literal["ok"] = "ok"
     service: str
     version: str
-    inference_mode: Literal["mock", "ml"]
+    # "hybrid" = hemoglobin uses the trained synthetic-data ML model while the
+    # other tests still use deterministic mock inference.
+    inference_mode: Literal["mock", "ml", "hybrid"]
 
 
 class TestMetadata(BaseModel):
@@ -92,13 +94,23 @@ class ModelDescriptor(BaseModel):
 class ModelsInfoResponse(BaseModel):
     """Describes the inference stack currently backing the API."""
 
-    inference_mode: Literal["mock", "ml"]
+    inference_mode: Literal["mock", "ml", "hybrid"]
     clinically_validated: bool = False
     active_models: list[ModelDescriptor]
-    # The planned real pipeline, documented for integrators.
+    # The real pipeline stages, documented for integrators.
     planned_pipeline: list[str]
     notes: str
     disclaimer: str
+    # Per-test inference backend: "ml", "mock", or "unavailable" (never a
+    # silent fallback to mock when a model fails to load).
+    test_inference: dict[str, Literal["ml", "mock", "unavailable"]] = Field(
+        default_factory=dict
+    )
+    # Per-test classifier backend: "ml" (demonstration SVM), "mock", or
+    # "unavailable" (scan still returns the value, with classification null).
+    test_classification: dict[str, Literal["ml", "mock", "unavailable"]] = Field(
+        default_factory=dict
+    )
 
 
 class PatientCreate(BaseModel):
@@ -137,6 +149,18 @@ class QualityResult(BaseModel):
     # Actionable issues for the patient when quality fails
     # (e.g. "retake in brighter light").
     issues: list[str] = Field(default_factory=list)
+    # Additional numeric quality evidence from the image pipeline (e.g.
+    # clipping fraction, paper brightness, ROI size). Empty for mock results.
+    metrics: dict[str, float] = Field(default_factory=dict)
+
+
+class RoiDetection(BaseModel):
+    """Where the pipeline found the reaction area (pixel coordinates)."""
+
+    method: str
+    confidence: float
+    # Four (x, y) corners ordered TL, TR, BR, BL.
+    corners_xy: list[list[float]] = Field(default_factory=list)
 
 
 class ImageAnalysis(BaseModel):
@@ -146,6 +170,7 @@ class ImageAnalysis(BaseModel):
     mean_lab: Optional[list[float]] = Field(default=None, min_length=3, max_length=3)
     synthetic_intensity: Optional[float] = None
     annotated_image_url: Optional[str] = None
+    roi_detection: Optional[RoiDetection] = None
 
 
 class Measurement(BaseModel):
@@ -161,8 +186,13 @@ class Classification(BaseModel):
     """Illustrative screening severity classification. Never a diagnosis."""
 
     label: str
-    method: str = Field(description="Classifier used, e.g. 'mock_svm_demo', 'svm'.")
+    method: str = Field(
+        description="Classifier used, e.g. 'mock_svm_demo', 'svm_synthetic_demo'."
+    )
     is_simulated: bool = True
+    # Provenance of the classifier (null for mock fixtures). For the trained
+    # demonstration SVM this is kind="svm"; its labels are ARTIFICIAL bands.
+    model: Optional[ModelDescriptor] = None
 
 
 class Explanation(BaseModel):
@@ -239,4 +269,37 @@ class ScreeningReportResponse(BaseModel):
     patient: ReportPatient
     test: TestMetadata
     analysis: ScanAnalysisResponse
+    disclaimer: str
+
+
+class AssistantQuality(BaseModel):
+    passed: bool
+    blur_score: Optional[float] = None
+    issues: list[str] = Field(default_factory=list)
+    metrics: dict[str, float] = Field(default_factory=dict)
+
+
+class AssistantContextResponse(BaseModel):
+    """GET /api/reports/{id}/assistant-context — de-identified report summary.
+
+    Grounding data for the "Aarogya AI" assistant. It deliberately contains NO
+    patient identifiers (no name, patient ID, report/session ID, age, sex,
+    timestamps) and NO image data. NOTE: the app has no authentication; this
+    endpoint is no more protected than GET /api/reports/{id} (knowledge of a
+    random report ID). Scope: fictional demonstration records only.
+    """
+
+    test_type: TestType
+    test_name: str
+    sample_type: SampleType
+    status: ScanStatus
+    source: DataSource
+    clinically_validated: bool = False
+    measurement: Optional[Measurement] = None
+    classification: Optional[Classification] = None
+    quality: AssistantQuality
+    roi_detection: Optional[RoiDetection] = None
+    model: ModelDescriptor
+    explanation: Explanation
+    interpretation_note: str
     disclaimer: str

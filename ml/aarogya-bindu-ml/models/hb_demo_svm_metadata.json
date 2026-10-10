@@ -1,0 +1,130 @@
+{
+  "model_identifier": "aarogya-bindu-hb-demo-svm",
+  "model_version": "1.0.0",
+  "created_utc": "2026-10-10T10:06:17+00:00",
+  "disclaimer": "SIMULATED - NOT FOR MEDICAL USE. Trained and evaluated only on synthetic images whose colors come from an invented target-to-color mapping. Outputs are not hemoglobin measurements and are not clinically validated. Bands are ARTIFICIAL equal-width slices with no clinical meaning.",
+  "source": "synthetic",
+  "clinically_validated": false,
+  "band_edges": [
+    4.0,
+    8.666667,
+    13.333333,
+    18.0
+  ],
+  "band_names": [
+    "artificial_band_A_4.0-8.7",
+    "artificial_band_B_8.7-13.3",
+    "artificial_band_C_13.3-18.0"
+  ],
+  "input_features": [
+    "norm_r",
+    "norm_g",
+    "norm_b",
+    "norm_L",
+    "norm_a",
+    "norm_bstar",
+    "norm_chroma",
+    "norm_hab_sin",
+    "norm_hab_cos",
+    "norm_hue_sin",
+    "norm_hue_cos",
+    "norm_sat",
+    "norm_val",
+    "norm_chrom_r",
+    "norm_chrom_g",
+    "norm_g_over_r",
+    "norm_b_over_r",
+    "norm_b_over_g",
+    "absorb_r",
+    "absorb_g",
+    "absorb_b",
+    "absorb_g_minus_b",
+    "absorb_g_over_sum",
+    "contrast_deltaE",
+    "contrast_dL",
+    "contrast_dchroma",
+    "raw_chrom_r",
+    "raw_chrom_g",
+    "raw_hab_sin",
+    "raw_hab_cos",
+    "svr_pred"
+  ],
+  "hyperparameters": {
+    "svc__C": 10,
+    "svc__gamma": "scale"
+  },
+  "cv_balanced_accuracy_train": 0.945,
+  "validation_metrics": {
+    "n": 92,
+    "accuracy": 0.9022,
+    "balanced_accuracy": 0.9114,
+    "macro_f1": 0.9048,
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        28,
+        0,
+        0
+      ],
+      [
+        6,
+        29,
+        1
+      ],
+      [
+        0,
+        2,
+        26
+      ]
+    ]
+  },
+  "test_metrics": {
+    "n": 83,
+    "accuracy": 0.9518,
+    "balanced_accuracy": 0.9524,
+    "macro_f1": 0.9454,
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        19,
+        0,
+        0
+      ],
+      [
+        3,
+        24,
+        1
+      ],
+      [
+        0,
+        0,
+        36
+      ]
+    ]
+  },
+  "reference_binned_svr_test": {
+    "n": 83,
+    "accuracy": 0.9398,
+    "balanced_accuracy": 0.9431,
+    "macro_f1": 0.9349,
+    "confusion_matrix_rows_true_cols_pred": [
+      [
+        19,
+        0,
+        0
+      ],
+      [
+        3,
+        24,
+        1
+      ],
+      [
+        0,
+        1,
+        35
+      ]
+    ]
+  },
+  "svr_dependency": {
+    "svr_model": "hb_svr.joblib",
+    "svr_created_utc": "2026-10-10T10:06:17+00:00"
+  }
+}

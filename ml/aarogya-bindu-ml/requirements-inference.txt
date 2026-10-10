@@ -1,0 +1,20 @@
+# Inference-only dependencies for aarogya_hb_ml.inference (predict_hemoglobin / get_model_info).
+# EXACT versions with which models/hb_svr.joblib was trained, saved and verified.
+# scikit-learn models are pickles: other scikit-learn / numpy versions may fail to load
+# the model or change predictions. Change these pins only together with retraining.
+#
+# Python: verified ONLY on CPython 3.14.8 (64-bit Windows).
+#   numpy 2.5.3 and scipy 1.18.1 declare Requires-Python >=3.12, so Python < 3.12 cannot
+#   install this set. Python 3.12 / 3.13 and Linux/macOS are untested.
+#
+# Training / evaluation / tests use requirements.txt (unchanged; pandas, matplotlib,
+# pillow, pytest are not needed for inference).
+
+numpy==2.5.3
+opencv-python-headless==5.0.0.93
+scikit-learn==1.9.1
+scipy==1.18.1
+joblib==1.6.0
+threadpoolctl==3.7.0
+narwhals==2.27.1
+cloudpickle==3.1.2

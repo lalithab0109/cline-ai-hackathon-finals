@@ -18,6 +18,12 @@ import type {
   TestType,
   TestsResponse,
 } from "@/lib/types";
+import type {
+  AssistantAnswer,
+  AssistantErrorBody,
+  AssistantRequestBody,
+  AssistantStatus,
+} from "@/lib/assistant/types";
 
 const API_BASE_URL =
   process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8000";
@@ -142,6 +148,56 @@ export function getPatientHistory(
 
 export function getReport(reportId: string): Promise<ScreeningReportResponse> {
   return getJson<ScreeningReportResponse>(`/api/reports/${reportId}`);
+}
+
+/**
+ * Aarogya AI calls go to the SAME-ORIGIN Next.js route (/api/assistant), never
+ * to FastAPI or the model provider directly — the API key stays server-side.
+ */
+export async function getAssistantStatus(): Promise<AssistantStatus> {
+  try {
+    const response = await fetch("/api/assistant", { headers: { Accept: "application/json" } });
+    if (!response.ok) return { available: false, mode: "unavailable" };
+    return (await response.json()) as AssistantStatus;
+  } catch {
+    return { available: false, mode: "unavailable" };
+  }
+}
+
+export async function askAssistant(body: AssistantRequestBody): Promise<AssistantAnswer> {
+  let response: Response;
+  try {
+    response = await fetch("/api/assistant", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Accept: "application/json" },
+      body: JSON.stringify(body),
+    });
+  } catch {
+    throw new AssistantRequestError("Could not reach Aarogya AI. Check your connection and try again.", 0, true);
+  }
+  if (!response.ok) {
+    let message = "Aarogya AI could not answer right now. Please try again.";
+    let retryable = response.status >= 500 || response.status === 429;
+    try {
+      const err = ((await response.json()) as AssistantErrorBody).error;
+      if (err?.message) message = err.message;
+      if (typeof err?.retryable === "boolean") retryable = err.retryable;
+    } catch {
+      // keep the generic message
+    }
+    throw new AssistantRequestError(message, response.status, retryable);
+  }
+  return (await response.json()) as AssistantAnswer;
+}
+
+export class AssistantRequestError extends ApiError {
+  retryable: boolean;
+
+  constructor(message: string, status: number, retryable: boolean) {
+    super(message, status);
+    this.name = "AssistantRequestError";
+    this.retryable = retryable;
+  }
 }
 
 /** Direct URL of the PDF download endpoint (used as an anchor href). */

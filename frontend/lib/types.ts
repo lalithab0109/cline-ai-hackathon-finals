@@ -11,9 +11,20 @@ export type SampleType = "blood" | "urine";
 
 export type DataSource = "mock" | "synthetic" | "validated";
 
+// Aarogya AI assistant types live in a client-safe module shared with the server route.
+export type {
+  AssistantAnswer,
+  AssistantAnswerKind,
+  AssistantMode,
+  AssistantRequestBody,
+  AssistantStatus,
+  AssistantTurn,
+} from "@/lib/assistant/types";
+
 export type ScanStatus = "success" | "quality_failed" | "error";
 
-export type InferenceMode = "mock" | "ml";
+/** "hybrid": hemoglobin uses the trained ML model; other tests are mocked. */
+export type InferenceMode = "mock" | "ml" | "hybrid";
 
 export interface HealthResponse {
   status: "ok";
@@ -49,6 +60,10 @@ export interface ModelsInfoResponse {
   planned_pipeline: string[];
   notes: string;
   disclaimer: string;
+  /** Backend serving each test; "unavailable" means HTTP 503, never mocked. */
+  test_inference: Record<string, "ml" | "mock" | "unavailable">;
+  /** Classifier backend per test; "unavailable" = value returned, category null. */
+  test_classification: Record<string, "ml" | "mock" | "unavailable">;
 }
 
 export interface QualityResult {
@@ -57,6 +72,15 @@ export interface QualityResult {
   calibration_detected: boolean | null;
   calibration_error: number | null;
   issues: string[];
+  /** Extra numeric quality evidence from the image pipeline (empty for mock). */
+  metrics: Record<string, number>;
+}
+
+export interface RoiDetection {
+  method: string;
+  confidence: number;
+  /** Four [x, y] pixel corners, ordered TL, TR, BR, BL. */
+  corners_xy: [number, number][];
 }
 
 export interface ImageAnalysis {
@@ -64,6 +88,7 @@ export interface ImageAnalysis {
   mean_lab: [number, number, number] | null;
   synthetic_intensity: number | null;
   annotated_image_url: string | null;
+  roi_detection: RoiDetection | null;
 }
 
 export interface Measurement {
@@ -74,9 +99,13 @@ export interface Measurement {
 }
 
 export interface Classification {
+  /** Verbatim label (e.g. "artificial_band_A_4.0-8.7" or a mock label). */
   label: string;
+  /** "svm_synthetic_demo" (trained demonstration SVM) or "mock_svm_demo". */
   method: string;
   is_simulated: boolean;
+  /** Classifier provenance; null for mock fixtures. kind "svm" = demonstration SVM. */
+  model: ModelDescriptor | null;
 }
 
 export interface Explanation {

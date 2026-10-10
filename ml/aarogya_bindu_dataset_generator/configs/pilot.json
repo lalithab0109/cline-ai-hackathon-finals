@@ -1,0 +1,68 @@
+{
+  "_comment": "Aarogya Bindu pilot configuration. SYNTHETIC data only: the mapping below is a design choice, not a clinical calibration. Omitted keys use the built-in defaults (see README 'Configuration').",
+  "num_base_samples": 150,
+  "generation_seed": 20261010,
+  "split_seed": 777,
+  "target_decimals": 2,
+  "variants": ["clean", "mild", "moderate", "challenging"],
+  "image": {
+    "_comment": "Origin top-left, x right, y down. Spot covers columns spot_x..spot_x+spot_width-1, rows spot_y..spot_y+spot_height-1.",
+    "width": 512,
+    "height": 512,
+    "background_rgb": [255, 255, 255],
+    "spot_x": 176,
+    "spot_y": 196,
+    "spot_width": 160,
+    "spot_height": 120
+  },
+  "mapping": {
+    "_comment": "t=clip((c-target_min)/(target_max-target_min),0,1); s=t**gamma; Lab=lab_low+s*(lab_high-lab_low); converted to 8-bit sRGB (D65).",
+    "type": "synthetic_lab_linear",
+    "mapping_id": "synthetic_lab_linear_v1",
+    "target_min": 4.0,
+    "target_max": 18.0,
+    "gamma": 1.0,
+    "lab_low": [86.0, 8.0, 38.0],
+    "lab_high": [38.0, 45.0, 28.0],
+    "calibration_table_csv": null
+  },
+  "splits": {
+    "train": 0.70,
+    "val": 0.15,
+    "test": 0.15,
+    "stratify_bins": 5
+  },
+  "checks": {
+    "max_attempts": 5,
+    "min_margin_px": 16,
+    "require_detectable_spot": true,
+    "min_detection_iou": 0.6,
+    "min_spot_paper_delta_e": 10.0
+  },
+  "profiles": {
+    "mild": {
+      "print_delta_e_max": 0.75, "spot_gradient_max_delta_l": 1.0, "edge_softness_sigma_px": [0.3, 0.8],
+      "edge_darkening_max": 0.02, "paper_texture_sigma": [0.5, 1.0],
+      "rotation_max_deg": 2.0, "perspective_max": 0.01, "scale_max": 0.03, "translate_max_px": 10.0,
+      "illumination_amplitude_max": 0.05, "shadow_probability": 0.1, "shadow_strength": [0.03, 0.10],
+      "blur_sigma": [0.0, 0.6], "defocus_probability": 0.0, "defocus_radius": [1.0, 1.5],
+      "white_balance_max": 0.03, "brightness": [0.95, 1.05], "contrast": [0.95, 1.05], "noise_sigma": [0.0, 2.0]
+    },
+    "moderate": {
+      "print_delta_e_max": 1.5, "spot_gradient_max_delta_l": 2.0, "edge_softness_sigma_px": [0.5, 1.5],
+      "edge_darkening_max": 0.04, "paper_texture_sigma": [1.0, 2.0],
+      "rotation_max_deg": 5.0, "perspective_max": 0.025, "scale_max": 0.06, "translate_max_px": 25.0,
+      "illumination_amplitude_max": 0.12, "shadow_probability": 0.3, "shadow_strength": [0.05, 0.20],
+      "blur_sigma": [0.5, 1.3], "defocus_probability": 0.2, "defocus_radius": [1.0, 2.0],
+      "white_balance_max": 0.07, "brightness": [0.88, 1.12], "contrast": [0.90, 1.10], "noise_sigma": [2.0, 5.0]
+    },
+    "challenging": {
+      "print_delta_e_max": 2.5, "spot_gradient_max_delta_l": 3.5, "edge_softness_sigma_px": [0.8, 2.5],
+      "edge_darkening_max": 0.06, "paper_texture_sigma": [1.5, 3.0],
+      "rotation_max_deg": 10.0, "perspective_max": 0.045, "scale_max": 0.10, "translate_max_px": 45.0,
+      "illumination_amplitude_max": 0.22, "shadow_probability": 0.6, "shadow_strength": [0.10, 0.35],
+      "blur_sigma": [1.0, 2.5], "defocus_probability": 0.35, "defocus_radius": [1.5, 3.0],
+      "white_balance_max": 0.12, "brightness": [0.78, 1.22], "contrast": [0.80, 1.20], "noise_sigma": [4.0, 10.0]
+    }
+  }
+}

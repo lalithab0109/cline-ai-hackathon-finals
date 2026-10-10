@@ -111,9 +111,16 @@ def get_patient(patient_id: str) -> Optional[dict[str, Any]]:
     return dict(row) if row else None
 
 
-def create_session(patient_id: str, test_type: str, status: str) -> dict[str, Any]:
+def create_session(
+    patient_id: str,
+    test_type: str,
+    status: str,
+    session_id: Optional[str] = None,
+) -> dict[str, Any]:
+    """Insert a screening session. `session_id` lets the caller run inference
+    first (using the ID as scan_id) and persist the true outcome status."""
     row = {
-        "id": _new_id(),
+        "id": session_id or _new_id(),
         "patient_id": patient_id,
         "test_type": test_type,
         "status": status,

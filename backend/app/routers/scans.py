@@ -3,13 +3,18 @@
 Validation order: patient exists -> content type -> size limit -> image
 integrity (Pillow decode check). Any failure produces a persisted
 `quality_failed` scan with NO measurement or classification, per the API
-contract. Successful uploads go through the inference adapter (mock today,
-OpenCV -> SVR -> SVM later) without the router knowing the difference.
+contract. Valid uploads go through the inference adapter, which routes
+hemoglobin to the trained ML model and other tests to mock fixtures; the
+router does not know the difference. If the hemoglobin model is unavailable
+the endpoint returns 503 (it never silently mocks).
 """
 
+import logging
+import uuid
 from io import BytesIO
 
 from fastapi import APIRouter, File, Form, HTTPException, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from PIL import Image, UnidentifiedImageError
 
 from .. import database
@@ -17,6 +22,7 @@ from ..config import ALLOWED_IMAGE_TYPES, MAX_IMAGE_BYTES
 from ..schemas import ScanAnalysisResponse, TestType
 from ..services import inference
 
+logger = logging.getLogger("aarogya.scans")
 router = APIRouter(tags=["scans"])
 
 _MAX_IMAGE_MB = MAX_IMAGE_BYTES // (1024 * 1024)
@@ -43,29 +49,47 @@ async def analyze_scan(
     if not issues:
         issues = _verify_image_integrity(image_bytes, image.content_type)
 
-    # Persist every attempt: failed scans are part of the demo record too.
-    session = database.create_session(
-        patient_id=patient_id,
-        test_type=test_type.value,
-        status="quality_failed" if issues else "success",
-    )
+    # The scan ID is also the session/report ID. It is generated up front so
+    # inference can run first and the stored status reflects the real outcome.
+    scan_id = str(uuid.uuid4())
 
     if issues:
         result = inference.build_quality_failure(
-            scan_id=session["id"], test_type=test_type, issues=issues
+            scan_id=scan_id, test_type=test_type, issues=issues
         )
     else:
-        result = inference.analyze_strip(
-            image_bytes=image_bytes,
-            test_type=test_type,
-            scan_id=session["id"],
-            patient_age=patient["age"],
-            patient_sex=patient["sex"],
-        )
+        try:
+            # CPU-bound (OpenCV + scikit-learn): keep the event loop free.
+            result = await run_in_threadpool(
+                inference.analyze_strip,
+                image_bytes=image_bytes,
+                test_type=test_type,
+                scan_id=scan_id,
+                patient_age=patient["age"],
+                patient_sex=patient["sex"],
+            )
+        except inference.MLUnavailableError as exc:
+            # Never fall back to mock values for a model-backed test, and do
+            # not persist a session for a scan that was never analyzed.
+            logger.error("ML inference unavailable: %s", exc)
+            raise HTTPException(
+                status_code=503,
+                detail=(
+                    f"The {test_type.value} analysis model is currently "
+                    f"unavailable. {exc}"
+                ),
+            ) from exc
 
-    # The report is a rendered view over this session, so report ID == session ID.
-    result.report_id = session["id"]
-    database.save_analysis(session["id"], result)
+    # Persist every analyzed attempt (failed scans are part of the demo
+    # record too). Report ID == session ID.
+    database.create_session(
+        patient_id=patient_id,
+        test_type=test_type.value,
+        status=result.status.value,
+        session_id=scan_id,
+    )
+    result.report_id = scan_id
+    database.save_analysis(scan_id, result)
     return result
 
 

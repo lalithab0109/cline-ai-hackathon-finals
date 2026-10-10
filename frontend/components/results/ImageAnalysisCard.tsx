@@ -1,6 +1,14 @@
 import { ScanSearch } from "lucide-react";
 import type { ScanAnalysisResponse } from "@/lib/types";
 
+/** Optional numeric quality evidence from the image pipeline (ML scans). */
+const METRIC_LABELS: [string, string][] = [
+  ["paper_brightness", "Paper brightness (0-255)"],
+  ["roi_clipped_fraction", "Clipped pixel fraction"],
+  ["roi_color_std", "Reaction-area color spread"],
+  ["roi_pixel_count", "Reaction-area pixels"],
+];
+
 function swatch(rgb: [number, number, number]): string {
   return `rgb(${Math.round(rgb[0])}, ${Math.round(rgb[1])}, ${Math.round(rgb[2])})`;
 }
@@ -72,9 +80,47 @@ export default function ImageAnalysisCard({
             </dd>
           </div>
         )}
+        {METRIC_LABELS.filter(([key]) => key in quality.metrics).map(
+          ([key, label]) => (
+            <div key={key} className="flex justify-between gap-4">
+              <dt>{label}</dt>
+              <dd className="font-medium text-slate-700">
+                {quality.metrics[key]}
+              </dd>
+            </div>
+          )
+        )}
+        {image?.roi_detection && (
+          <div className="flex justify-between gap-4">
+            <dt>Reaction area</dt>
+            <dd className="text-right font-medium text-slate-700">
+              Found via {image.roi_detection.method} (confidence{" "}
+              {image.roi_detection.confidence})
+            </dd>
+          </div>
+        )}
       </dl>
 
-      {image ? (
+      {image?.roi_detection && image.roi_detection.corners_xy.length === 4 && (
+        <p className="mt-2 text-xs text-slate-500">
+          Area corners (px):{" "}
+          {image.roi_detection.corners_xy
+            .map(([x, y]) => `(${x}, ${y})`)
+            .join("  ")}
+        </p>
+      )}
+
+      {analysis.status !== "success" ? (
+        <p className="mt-4 rounded-lg bg-slate-50 px-3 py-2.5 text-xs leading-relaxed text-slate-600">
+          No color analysis was completed for this scan.
+        </p>
+      ) : analysis.source !== "mock" ? (
+        <p className="mt-4 rounded-lg bg-sky-50 px-3 py-2.5 text-xs leading-relaxed text-sky-800">
+          Color features were extracted from the reaction area by the image
+          analysis pipeline using white-paper normalization (not colorimetric
+          calibration). Raw RGB/Lab values are not reported in this version.
+        </p>
+      ) : image ? (
         <div className="mt-4 space-y-3 border-t border-slate-100 pt-4">
           {image.mean_rgb && (
             <div className="flex items-center justify-between text-xs">

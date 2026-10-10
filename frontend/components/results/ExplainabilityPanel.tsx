@@ -17,6 +17,8 @@ export default function ExplainabilityPanel({
   const [open, setOpen] = useState(false);
   const { analysis, patient } = report;
   const { explanation } = analysis;
+  // Mock results are fixed fixtures; anything else came from the image pipeline.
+  const isMock = analysis.source === "mock";
 
   return (
     <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-card">
@@ -48,9 +50,11 @@ export default function ExplainabilityPanel({
                 Observed inputs
               </h3>
               <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
-                Age {patient.age}
-                {patient.sex ? `, sex ${patient.sex}` : ""}; a validated strip
-                photo (color features pending the OpenCV pipeline).
+                {isMock
+                  ? `Age ${patient.age}${patient.sex ? `, sex ${patient.sex}` : ""}; a validated strip photo (its colors were not analyzed).`
+                  : analysis.status === "success"
+                    ? "Color features of the reaction area in the uploaded photo. Age and sex were not used by this model."
+                    : "The uploaded photo, which could not be used."}
               </p>
             </div>
             <div className="rounded-xl bg-slate-50 p-3.5">
@@ -59,18 +63,26 @@ export default function ExplainabilityPanel({
               </h3>
               <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
                 {analysis.measurement
-                  ? `${analysis.measurement.value} ${analysis.measurement.unit} — a fixed simulated fixture, not read from the photo.`
+                  ? isMock
+                    ? `${analysis.measurement.value} ${analysis.measurement.unit} — a fixed simulated fixture, not read from the photo.`
+                    : `${analysis.measurement.value} ${analysis.measurement.unit} — a simulated value estimated by a model trained on synthetic data. Not a laboratory measurement.`
                   : "None — the scan failed validation."}
               </p>
             </div>
             <div className="rounded-xl bg-slate-50 p-3.5">
               <h3 className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
-                Illustrative category
+                {analysis.classification?.model?.kind === "svm"
+                  ? "Demonstration category"
+                  : "Illustrative category"}
               </h3>
               <p className="mt-1.5 text-xs leading-relaxed text-slate-600">
                 {analysis.classification
-                  ? `${analysis.classification.label.replace(/_/g, " ")} — demonstration label, not a diagnosis.`
-                  : "None assigned."}
+                  ? analysis.classification.model?.kind === "svm"
+                    ? `${analysis.classification.label} — an artificial category from a demonstration SVM trained on synthetic labels. Not a medical severity assessment.`
+                    : `${analysis.classification.label.replace(/_/g, " ")} — a mock fixture, not a diagnosis.`
+                  : analysis.status === "success"
+                    ? "None — no category was assigned to this scan."
+                    : "None assigned."}
               </p>
             </div>
           </div>
@@ -78,7 +90,7 @@ export default function ExplainabilityPanel({
           {explanation.inputs_used.length > 0 && (
             <div>
               <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                Inputs used by the classifier
+                {isMock ? "Inputs used by the classifier" : "Inputs used by the model"}
               </h3>
               <div className="mt-2 flex flex-wrap gap-1.5">
                 {explanation.inputs_used.map((input) => (

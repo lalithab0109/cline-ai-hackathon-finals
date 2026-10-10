@@ -1,0 +1,44 @@
+{
+  "by_split": {
+    "test": {
+      "ok": 83,
+      "quality_failed": 1
+    },
+    "train": {
+      "ok": 424,
+      "quality_failed": 0
+    },
+    "val": {
+      "ok": 92,
+      "quality_failed": 0
+    }
+  },
+  "by_profile": {
+    "challenging": {
+      "ok": 149,
+      "quality_failed": 1
+    },
+    "clean": {
+      "ok": 150,
+      "quality_failed": 0
+    },
+    "mild": {
+      "ok": 150,
+      "quality_failed": 0
+    },
+    "moderate": {
+      "ok": 150,
+      "quality_failed": 0
+    }
+  },
+  "failures": [
+    {
+      "uid": "contrib_a:IMG000072",
+      "split": "test",
+      "augmentation_profile": "challenging",
+      "target_hb_g_dl": 4.15,
+      "pre_status": "quality_failed",
+      "pre_issues": "overexposed_or_clipped_roi (29.0% pixels with >=2 saturated channels > 5%)"
+    }
+  ]
+}

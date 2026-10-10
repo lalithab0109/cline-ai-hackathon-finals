@@ -1,0 +1,12 @@
+{
+  "_comment": "Registry of synthetic dataset contributions. Every source must be a folder containing manifest.csv + generation_config.json + images/. Sources are only merged when their color-mapping description is identical. Add a second contributor by appending an entry here.",
+  "sources": [
+    {
+      "source_id": "contrib_a",
+      "path": "raw/contrib_a",
+      "description": "Aarogya Bindu synthetic generator v0.1.0 pilot (150 base samples x 4 variants)",
+      "manifest": "manifest.csv",
+      "config": "generation_config.json"
+    }
+  ]
+}

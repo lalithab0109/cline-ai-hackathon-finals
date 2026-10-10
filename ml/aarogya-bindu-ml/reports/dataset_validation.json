@@ -1,0 +1,248 @@
+{
+  "generated_utc": "2026-10-10T10:05:37+00:00",
+  "overall": "PASS",
+  "n_images": 600,
+  "split_counts": {
+    "train": {
+      "images": 424,
+      "groups": 100,
+      "target_mean": 10.911,
+      "target_min": 4.2,
+      "target_max": 17.91
+    },
+    "val": {
+      "images": 92,
+      "groups": 21,
+      "target_mean": 11.038,
+      "target_min": 4.79,
+      "target_max": 17.7
+    },
+    "test": {
+      "images": 84,
+      "groups": 20,
+      "target_mean": 11.393,
+      "target_min": 4.08,
+      "target_max": 17.02
+    }
+  },
+  "disclaimer": "SIMULATED - NOT FOR MEDICAL USE. Trained and evaluated only on synthetic images whose colors come from an invented target-to-color mapping. Outputs are not hemoglobin measurements and are not clinically validated.",
+  "checks": [
+    {
+      "check": "sources_and_mapping",
+      "status": "PASS",
+      "detail": "1 source(s) ['contrib_a']; identical mapping 'synthetic_lab_linear_v1'",
+      "metrics": {
+        "n_sources": 1,
+        "equation": "t = clip((c - c_min)/(c_max - c_min), 0, 1); s = t**gamma; Lab = Lab_low + s*(Lab_high - Lab_low); RGB8 = round(255*sRGB(Lab))"
+      }
+    },
+    {
+      "check": "second_contributor",
+      "status": "WARN",
+      "detail": "only one contributor dataset found; per-contributor comparison covers a single source",
+      "metrics": {}
+    },
+    {
+      "check": "files_exist_and_readable",
+      "status": "PASS",
+      "detail": "missing=[] unreadable=[]",
+      "metrics": {
+        "missing": 0,
+        "unreadable": 0
+      }
+    },
+    {
+      "check": "rgb_dimensions_512x512",
+      "status": "PASS",
+      "detail": "bad=[]",
+      "metrics": {
+        "bad": 0
+      }
+    },
+    {
+      "check": "file_hash_matches_manifest",
+      "status": "PASS",
+      "detail": "mismatched=[]",
+      "metrics": {}
+    },
+    {
+      "check": "target_finite_numeric",
+      "status": "PASS",
+      "detail": "invalid=[]",
+      "metrics": {
+        "invalid": 0
+      }
+    },
+    {
+      "check": "target_within_documented_range",
+      "status": "PASS",
+      "detail": "documented range [4.0, 18.0] g/dL",
+      "metrics": {
+        "outside": 0,
+        "min": 4.08,
+        "max": 17.91
+      }
+    },
+    {
+      "check": "duplicate_ids_and_paths",
+      "status": "PASS",
+      "detail": "dup_ids=[] dup_paths=[]",
+      "metrics": {}
+    },
+    {
+      "check": "consistent_label_per_base_sample",
+      "status": "PASS",
+      "detail": "conflicting=[]",
+      "metrics": {}
+    },
+    {
+      "check": "duplicate_images_and_conflicting_labels",
+      "status": "WARN",
+      "detail": "9 identical-pixel group(s), max label spread 0.07 g/dL (8-bit quantization); united into one split group",
+      "metrics": {
+        "groups": 9,
+        "max_label_spread": 0.07,
+        "examples": [
+          {
+            "uids": [
+              "contrib_a:IMG000229",
+              "contrib_a:IMG000481"
+            ],
+            "targets": [
+              7.26,
+              7.32
+            ],
+            "spread": 0.06
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000097",
+              "contrib_a:IMG000365"
+            ],
+            "targets": [
+              11.16,
+              11.09
+            ],
+            "spread": 0.07
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000305",
+              "contrib_a:IMG000401"
+            ],
+            "targets": [
+              8.37,
+              8.39
+            ],
+            "spread": 0.02
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000177",
+              "contrib_a:IMG000333"
+            ],
+            "targets": [
+              7.64,
+              7.66
+            ],
+            "spread": 0.02
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000049",
+              "contrib_a:IMG000385"
+            ],
+            "targets": [
+              6.35,
+              6.31
+            ],
+            "spread": 0.04
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000085",
+              "contrib_a:IMG000093"
+            ],
+            "targets": [
+              17.44,
+              17.43
+            ],
+            "spread": 0.01
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000149",
+              "contrib_a:IMG000157"
+            ],
+            "targets": [
+              15.37,
+              15.4
+            ],
+            "spread": 0.03
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000133",
+              "contrib_a:IMG000353"
+            ],
+            "targets": [
+              15.76,
+              15.74
+            ],
+            "spread": 0.02
+          },
+          {
+            "uids": [
+              "contrib_a:IMG000433",
+              "contrib_a:IMG000593"
+            ],
+            "targets": [
+              8.88,
+              8.81
+            ],
+            "spread": 0.07
+          }
+        ]
+      }
+    },
+    {
+      "check": "grouping_metadata",
+      "status": "PASS",
+      "detail": "150 base samples; profiles ['challenging', 'clean', 'mild', 'moderate']",
+      "metrics": {}
+    },
+    {
+      "check": "contributor_distributions",
+      "status": "PASS",
+      "detail": "per-source target statistics",
+      "metrics": {
+        "table": {
+          "contrib_a": {
+            "count": 600.0,
+            "mean": 10.998,
+            "std": 4.05,
+            "min": 4.08,
+            "25%": 7.54,
+            "50%": 11.01,
+            "75%": 14.51,
+            "max": 17.91
+          }
+        }
+      }
+    },
+    {
+      "check": "dataset_type_synthetic",
+      "status": "PASS",
+      "detail": "all rows marked synthetic",
+      "metrics": {}
+    },
+    {
+      "check": "split_group_leakage",
+      "status": "PASS",
+      "detail": "141 split groups from 150 base samples; each group in exactly one split",
+      "metrics": {
+        "max_splits_per_group": 1
+      }
+    }
+  ]
+}

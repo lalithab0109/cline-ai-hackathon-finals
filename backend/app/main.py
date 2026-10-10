@@ -4,6 +4,7 @@ Run locally:
     uvicorn app.main:app --reload --port 8000
 """
 
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -12,12 +13,25 @@ from fastapi.middleware.cors import CORSMiddleware
 from . import database
 from .config import APP_NAME, APP_VERSION, allowed_origins
 from .routers import health, models, patients, reports, scans, tests
+from .services import inference
+
+logger = logging.getLogger("aarogya.startup")
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Create SQLite tables on startup (idempotent).
     database.init_db()
+
+    # Load the hemoglobin model once, up front, so the first scan is fast and
+    # a missing/incompatible artifact is reported immediately. A failure does
+    # NOT crash the app (glucose / urine albumin mocks keep working) and does
+    # NOT switch hemoglobin to mock: hemoglobin scans return HTTP 503 and
+    # /api/models/info reports the model as unavailable.
+    try:
+        inference.startup_check()
+    except inference.MLUnavailableError as exc:
+        logger.error("HEMOGLOBIN ML MODEL UNAVAILABLE - scans will return 503: %s", exc)
     yield
 
 
