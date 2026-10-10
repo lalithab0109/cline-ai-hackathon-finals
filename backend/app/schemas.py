@@ -106,9 +106,10 @@ class PatientCreate(BaseModel):
 
     age: int = Field(ge=0, le=120)
     sex: Optional[Literal["female", "male", "other"]] = None
-    demo_identifier: Optional[str] = Field(
+    display_name: Optional[str] = Field(
         default=None,
-        description="Optional label for the fictional demo session (e.g. 'demo-patient-1').",
+        max_length=80,
+        description="Optional fictional display name for the demo profile.",
     )
 
 
@@ -116,7 +117,7 @@ class PatientResponse(BaseModel):
     patient_id: str
     age: int
     sex: Optional[str] = None
-    demo_identifier: Optional[str] = None
+    display_name: Optional[str] = None
     created_at: str
 
 
@@ -196,10 +197,17 @@ class ScanAnalysisResponse(BaseModel):
 
 
 class ScreeningHistoryEntry(BaseModel):
+    """One saved screening session in a patient's history."""
+
     scan_id: str
     report_id: Optional[str] = None
     test_type: TestType
     status: ScanStatus
+    source: Optional[DataSource] = None
+    is_simulated: bool = True
+    # Null for failed-quality scans — never a fabricated result.
+    measurement: Optional[Measurement] = None
+    classification: Optional[Classification] = None
     created_at: str
 
 

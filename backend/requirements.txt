@@ -3,6 +3,13 @@ fastapi==0.115.6
 uvicorn==0.34.0
 pydantic==2.10.4
 
+# Multipart form parsing for POST /api/scans/analyze image uploads.
+python-multipart==0.0.20
+
+# Image integrity validation for uploaded strip photos (the future OpenCV
+# pipeline will perform the real image analysis).
+pillow==12.3.0
+
 # Future iterations (declared in the project stack, installed now so the
 # environment is ready; not yet used by any code path):
 #   - SQLite persistence uses the Python standard library (sqlite3).

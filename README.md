@@ -29,13 +29,16 @@ backend/    FastAPI + Pydantic (+ SQLite and ReportLab in later iterations)
 ml/         Placeholder — future OpenCV / scikit-learn pipeline (see ml/README.md)
 ```
 
-## Current status (Iteration 1 — foundation)
+## Current status (Iteration 2 — patient workflow + mock inference)
 
 - ✅ Project scaffolding, design system, and landing page
 - ✅ `GET /api/health`, `GET /api/tests`, `GET /api/models/info`
-- ✅ Stable request/response schemas for the future scan-analysis contract
-- ⏳ Patient form, scanner, mock inference, SQLite, reports/PDF, history —
-  later iterations
+- ✅ `POST /api/patients`, `POST /api/scans/analyze`, screening history
+- ✅ SQLite persistence (patients, screening sessions, analysis results)
+- ✅ Deterministic mock inference behind the stable scan contract
+- ✅ Guided screening UI: patient details → test selection → image upload →
+  processing → simulated result summary
+- ⏳ Explainable results page, reports/PDF — next iteration
 - ⏳ Real ML models — developed separately in `ml/`, integrated behind the
   backend inference adapter without changing the API contract
 
@@ -87,11 +90,11 @@ npm run build       # production build
 | GET | `/api/health` | ✅ implemented | Liveness + inference mode |
 | GET | `/api/tests` | ✅ implemented | Metadata for hemoglobin, glucose, urine albumin |
 | GET | `/api/models/info` | ✅ implemented | Declares mock inference + planned ML pipeline |
-| POST | `/api/patients` | 🔜 501 stub | Create fictional/demo patient |
-| POST | `/api/scans/analyze` | 🔜 501 stub | Multipart: `image`, `test_type`, `patient_id` |
+| POST | `/api/patients` | ✅ implemented | Create fictional/demo patient |
+| POST | `/api/scans/analyze` | ✅ implemented (mock) | Multipart: `image`, `test_type`, `patient_id` |
 | GET | `/api/reports/{id}` | 🔜 501 stub | Structured screening report |
 | GET | `/api/reports/{id}/pdf` | 🔜 501 stub | ReportLab-generated PDF |
-| GET | `/api/patients/{id}/history` | 🔜 501 stub | Demo screening history |
+| GET | `/api/patients/{id}/history` | ✅ implemented | Demo screening history |
 
 The scan-analysis response contract (Pydantic: `backend/app/schemas.py`,
 TypeScript: `frontend/lib/types.ts`) is **stable across the mock → ML

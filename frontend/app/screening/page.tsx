@@ -1,72 +1,126 @@
-import Link from "next/link";
-import type { Metadata } from "next";
-import { ArrowLeft, Construction } from "lucide-react";
+"use client";
+
+import { useState } from "react";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
 import Header from "@/components/Header";
-
-export const metadata: Metadata = {
-  title: "Start Screening — Aarogya Bindu",
-};
-
-const PLANNED_STEPS = [
-  "Patient details (demo profile)",
-  "Diagnostic test selection",
-  "Test-strip image upload",
-  "Scan processing with quality checks",
-  "Explainable screening result",
-  "Downloadable PDF report",
-];
+import PatientForm from "@/components/screening/PatientForm";
+import ProcessingState from "@/components/screening/ProcessingState";
+import ScanResultSummary from "@/components/screening/ScanResultSummary";
+import Stepper, { type ScreeningStep } from "@/components/screening/Stepper";
+import StripScanner from "@/components/screening/StripScanner";
+import TestSelector from "@/components/screening/TestSelector";
+import { analyzeScan } from "@/lib/api";
+import type {
+  PatientResponse,
+  ScanAnalysisResponse,
+  TestMetadata,
+} from "@/lib/types";
 
 /**
- * Placeholder for the screening journey. The patient form, test selection,
- * scanner, results, and report download are scheduled for the next
- * development iterations — this page exists so the landing CTA has an
- * honest, clearly labeled destination.
+ * Guided screening journey:
+ * Patient details -> Test selection -> Image upload -> Mock analysis ->
+ * Saved screening session (result summary).
+ *
+ * All data flows through the typed API client; no inference logic or
+ * hardcoded responses live in components.
  */
-export default function ScreeningPlaceholderPage() {
+export default function ScreeningPage() {
+  const [step, setStep] = useState<ScreeningStep>("patient");
+  const [patient, setPatient] = useState<PatientResponse | null>(null);
+  const [test, setTest] = useState<TestMetadata | null>(null);
+  const [result, setResult] = useState<ScanAnalysisResponse | null>(null);
+  const [analyzeError, setAnalyzeError] = useState<string | null>(null);
+
+  async function handleAnalyze(file: File) {
+    if (!patient || !test) return;
+    setAnalyzeError(null);
+    setStep("processing");
+    try {
+      const response = await analyzeScan({
+        patientId: patient.patient_id,
+        testType: test.id,
+        image: file,
+      });
+      setResult(response);
+      setStep("result");
+    } catch (err) {
+      setAnalyzeError(
+        err instanceof Error ? err.message : "Analysis failed unexpectedly."
+      );
+      setStep("upload");
+    }
+  }
+
+  function handleRetake() {
+    setResult(null);
+    setAnalyzeError(null);
+    setStep("upload");
+  }
+
+  function handleNewScreening() {
+    // Keep the demo patient; choose a new test and photo.
+    setTest(null);
+    setResult(null);
+    setAnalyzeError(null);
+    setStep("test");
+  }
+
   return (
     <div className="flex min-h-screen flex-col">
       <DisclaimerBanner />
       <Header />
-      <main className="flex flex-1 items-center justify-center bg-clinical-grid px-4 py-16">
-        <div className="w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-card">
-          <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-50 text-brand-600">
-            <Construction className="h-7 w-7" aria-hidden="true" />
-          </span>
-          <h1 className="mt-5 text-2xl font-bold tracking-tight text-slate-900">
-            Screening journey — coming next
-          </h1>
-          <p className="mt-3 text-sm leading-relaxed text-slate-600">
-            This is a placeholder page. The guided screening flow is being
-            built in the next development iteration and will walk you through:
-          </p>
-          <ol className="mx-auto mt-6 max-w-xs space-y-2.5 text-left">
-            {PLANNED_STEPS.map((step, index) => (
-              <li
-                key={step}
-                className="flex items-center gap-3 rounded-lg border border-slate-100 bg-slate-50 px-3 py-2 text-sm text-slate-700"
-              >
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-brand-600 text-xs font-bold text-white">
-                  {index + 1}
-                </span>
-                {step}
-              </li>
-            ))}
-          </ol>
-          <p className="mt-6 text-xs leading-relaxed text-slate-500">
-            All demonstration results will be labeled{" "}
-            <span className="font-semibold text-amber-600">
-              SIMULATED — NOT FOR MEDICAL USE
+      <main className="flex-1 bg-clinical-grid px-4 py-10 sm:py-14">
+        <Stepper current={step} />
+
+        {patient && step !== "patient" && (
+          <p className="mt-4 text-center text-xs text-slate-500">
+            Demo profile:{" "}
+            <span className="font-medium text-slate-700">
+              {patient.display_name ?? "Anonymous"} · age {patient.age}
+              {patient.sex ? ` · ${patient.sex}` : ""}
             </span>
-            .
           </p>
-          <Link
-            href="/"
-            className="mt-6 inline-flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:border-brand-300 hover:text-brand-700"
-          >
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Back to home
-          </Link>
+        )}
+
+        <div className="mt-8">
+          {step === "patient" && (
+            <PatientForm
+              onComplete={(created) => {
+                setPatient(created);
+                setStep("test");
+              }}
+            />
+          )}
+
+          {step === "test" && (
+            <TestSelector
+              selected={test}
+              onSelect={setTest}
+              onContinue={() => test && setStep("upload")}
+            />
+          )}
+
+          {step === "upload" && test && (
+            <StripScanner
+              testName={test.name}
+              disabled={false}
+              serverError={analyzeError}
+              onAnalyze={handleAnalyze}
+            />
+          )}
+
+          {step === "processing" && test && (
+            <ProcessingState testName={test.name} />
+          )}
+
+          {step === "result" && result && test && (
+            <ScanResultSummary
+              result={result}
+              test={test}
+              onRetake={handleRetake}
+              onNewScreening={handleNewScreening}
+            />
+          )}
         </div>
       </main>
     </div>

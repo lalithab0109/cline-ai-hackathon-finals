@@ -107,11 +107,29 @@ export interface ScanAnalysisResponse {
   disclaimer: string;
 }
 
+export interface PatientCreatePayload {
+  age: number;
+  sex?: "female" | "male" | "other";
+  display_name?: string;
+}
+
+export interface PatientResponse {
+  patient_id: string;
+  age: number;
+  sex: string | null;
+  display_name: string | null;
+  created_at: string;
+}
+
 export interface ScreeningHistoryEntry {
   scan_id: string;
   report_id: string | null;
   test_type: TestType;
   status: ScanStatus;
+  source: DataSource | null;
+  is_simulated: boolean;
+  measurement: Measurement | null;
+  classification: Classification | null;
   created_at: string;
 }
 
