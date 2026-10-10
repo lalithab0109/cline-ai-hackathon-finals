@@ -1,0 +1,10 @@
+# Aarogya Bindu — backend dependencies (Python 3.10+ recommended)
+fastapi==0.115.6
+uvicorn==0.34.0
+pydantic==2.10.4
+
+# Future iterations (declared in the project stack, installed now so the
+# environment is ready; not yet used by any code path):
+#   - SQLite persistence uses the Python standard library (sqlite3).
+#   - ReportLab will power GET /api/reports/{id}/pdf in a later iteration.
+reportlab==4.2.5

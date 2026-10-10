@@ -1,0 +1,31 @@
+# --- Node / Next.js (frontend/) ---
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+
+# --- Python (backend/, ml/) ---
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Local data / artifacts ---
+*.db
+*.sqlite3
+uploads/
+*.pdf
+
+# --- Environment / secrets ---
+.env
+.env.local
+.env.*.local
+
+# --- OS / editor ---
+.DS_Store
+.idea/
+.vscode/

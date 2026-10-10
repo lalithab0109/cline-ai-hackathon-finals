@@ -1,0 +1,19 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: light;
+}
+
+body {
+  @apply bg-slate-50 text-slate-800 antialiased;
+}
+
+/* Subtle clinical grid texture used behind hero sections. */
+.bg-clinical-grid {
+  background-image:
+    linear-gradient(to right, rgb(13 148 136 / 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgb(13 148 136 / 0.05) 1px, transparent 1px);
+  background-size: 2.5rem 2.5rem;
+}
