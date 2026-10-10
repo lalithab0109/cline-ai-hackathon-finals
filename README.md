@@ -1,218 +1,242 @@
 # Aarogya Bindu
 
-**AI-assisted preliminary diagnostic screening — hackathon prototype.**
-All demonstration results are **SIMULATED — NOT FOR MEDICAL USE**.
+### AI-assisted, image-based preliminary screening — a synthetic-data hackathon prototype
 
-Aarogya Bindu is a patient-facing web application demonstrating how
-smartphone-based colorimetric test-strip analysis could support accessible
-preliminary health screening:
+> [!IMPORTANT]
+> **SIMULATED — NOT FOR MEDICAL USE.** Aarogya Bindu is a technology demonstration, not a diagnostic device. Its hemoglobin model was trained and evaluated exclusively on computer-generated test-strip images using an invented color-to-target mapping. It does **not** measure actual blood hemoglobin, detect anemia, or provide clinically validated results. Use fictional patient information only.
 
-```text
-Patient Information
-→ Select Diagnostic Test
-→ Upload Test-Strip Image
-→ OpenCV Image Processing      (future ML phase)
-→ SVR Biomarker Estimation     (future ML phase)
-→ SVM Screening Classification (future ML phase)
-→ Explainable Screening Report
-→ Downloadable PDF
-```
+## The problem
 
-The primary specification is
-[`Aarogya_Bindu_Development_and_ML_Roadmap.md`](./Aarogya_Bindu_Development_and_ML_Roadmap.md).
+Conventional hemoglobin screening involves blood collection and access to appropriate testing equipment and personnel. This can make frequent, convenient preliminary screening difficult, particularly in resource-constrained settings. An accessible image-based workflow is worth exploring—but color-based estimates must be clinically validated before they can be used for healthcare decisions.
 
-## Repository layout
+## Our idea
+
+**Aarogya Bindu** explores what an accessible, patient-facing screening experience could look like. A user enters fictional patient details, chooses a test, uploads an image of a demonstration test strip, and receives an explainable screening report. The hemoglobin pathway combines **OpenCV image processing**, **support vector regression (SVR)** for a simulated hemoglobin-equivalent estimate, and a separate **support vector machine (SVM)** for nonclinical demonstration categories. A **Cline Agents SDK-powered report assistant** can explain the saved report in natural language, with safety checks and clear simulation warnings.
+
+The current implementation is a **working software prototype**, not a validated non-invasive hemoglobin measurement system.
+
+## Demo workflow
 
 ```text
-frontend/   Next.js (App Router) + TypeScript + Tailwind CSS + Lucide icons
-backend/    FastAPI + Pydantic (+ SQLite and ReportLab in later iterations)
-ml/         Placeholder — future OpenCV / scikit-learn pipeline (see ml/README.md)
+Fictional patient information
+          ↓
+Choose a screening test
+          ↓
+Upload a test-strip image
+          ↓
+Image-quality checks and region-of-interest detection
+          ↓
+Hemoglobin: OpenCV color features → trained SVR → demo SVM
+Glucose / urine albumin: deterministic mock demonstration results
+          ↓
+Saved screening report + explanation
+          ↓
+PDF download + optional Cline-powered report Q&A
 ```
 
-## Current status (Iteration 4 — hemoglobin ML integrated)
+## Features
 
-- ✅ Project scaffolding, design system, and landing page
-- ✅ `GET /api/health`, `GET /api/tests`, `GET /api/models/info`
-- ✅ `POST /api/patients`, `POST /api/scans/analyze`, screening history
-- ✅ SQLite persistence (patients, screening sessions, analysis results)
-- ✅ **Hemoglobin: trained SVR (OpenCV preprocessing + color features) from
-  `ml/aarogya-bindu-ml`**, trained and evaluated only on synthetic images.
-  The value is a *simulated hemoglobin-equivalent*, not clinically validated.
-  A saved **demonstration SVM** adds an *artificial category*
-  (`artificial_band_A/B/C`, equal-width slices of the synthetic value range;
-  no clinical meaning, not a severity assessment). If the SVM is unavailable the
-  SVR estimate is still returned with `classification = null` and a warning.
-- ✅ **Glucose and urine albumin: still deterministic mock fixtures**
-  (`source = "mock"`); no trained models exist for them yet.
-- ✅ Guided screening UI: patient details → test selection → image upload →
-  processing → redirect to the saved report
-- ✅ `/results/[id]` explainable results page (fetches `GET /api/reports/{id}`)
-- ✅ ReportLab A4 PDF report, generated in memory
-- ⏳ ML models for glucose and urine albumin (none exist yet)
+- **Guided screening flow:** patient details, test selection, image upload, processing, and report view.
+- **Synthetic hemoglobin inference:** trained SVR applied to a restricted, synthetic-style test-strip image format.
+- **Image analysis:** region-of-interest detection, image-quality checks, and explanations for failed-quality scans.
+- **Demonstration classification:** trained SVM assigns artificial `artificial_band_A/B/C` labels, **not** clinical risk or anemia-severity categories.
+- **Additional demo tests:** glucose and urine albumin are deterministic **mock** outputs, not trained predictions.
+- **Saved reports:** SQLite persistence, screening history, and downloadable A4 PDF reports generated with ReportLab.
+- **Aarogya AI:** optional, context-aware report assistant built with the Cline Agents SDK (`@cline/agents`), with explicit safety restrictions.
+- **Transparency:** simulation disclaimers, model provenance, quality details, and limitations are surfaced in the product.
 
-## Prerequisites
+## Technology stack
 
-- Node.js 20+ and npm
-- **Python 3.12+** (the pinned `numpy 2.5.3` / `scipy 1.18.1` require it).
-  Verified on macOS arm64 with CPython 3.12.15.
+| Layer | Technologies | Role |
+| --- | --- | --- |
+| Frontend | Next.js 15, React, TypeScript, Tailwind CSS, Lucide | Screening workflow, report UI, assistant chat |
+| Backend | FastAPI, Pydantic | REST endpoints, validation, orchestration |
+| Storage | SQLite | Fictional patient records, scans, report history |
+| ML / computer vision | Python, OpenCV, scikit-learn, NumPy | Strip preprocessing, color features, SVR/SVM inference |
+| PDF | ReportLab | Downloadable reports |
+| Conversational AI | `@cline/agents` | Server-side report explanation |
 
-## Run the backend (FastAPI)
+## Repository structure
+
+```text
+frontend/
+  app/                       # Next.js routes, including /results/[id]
+  app/api/assistant/          # Server-side assistant endpoint
+  components/results/        # Results and assistant UI
+  lib/assistant/server/      # Cline agent, prompts, safety, context, limits
+
+backend/
+  app/routers/               # Health, models, scans, reports, patients
+  app/services/              # ML integration, mock inference, PDF, context
+  app/schemas.py             # API data contracts
+
+ml/
+  aarogya-bindu-ml/          # Trained SVR/SVM, preprocessing, tests, reports
+  aarogya_bindu_dataset_generator/  # Synthetic dataset generation source
+```
+
+For the original project plan, see [Development and ML Roadmap](Aarogya_Bindu_Development_and_ML_Roadmap.md).
+
+## Getting started
+
+### Prerequisites
+
+- **Node.js 22+** and npm (required for the optional Cline assistant)
+- **Python 3.12+** (the pinned inference dependencies require it)
+- macOS/Linux shell or equivalent terminal
+
+### 1. Clone the repository
+
+```bash
+git clone https://github.com/lalithab0109/cline-ai-hackathon-finals.git
+cd cline-ai-hackathon-finals
+```
+
+### 2. Start the FastAPI backend
+
+In terminal 1:
 
 ```bash
 cd backend
 python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
-cp .env.example .env   # optional; defaults work for local dev
+cp .env.example .env
 uvicorn app.main:app --reload --port 8000
 ```
 
-- `pip install -r requirements.txt` also installs the hemoglobin ML inference
-  dependencies via `-r ../ml/aarogya-bindu-ml/requirements-inference.txt`
-  (**exact pins**: the model is a pickled scikit-learn pipeline). The model is
-  loaded once at startup from `ml/aarogya-bindu-ml/models/hb_svr.joblib`
-  (override the directory with `ML_PROJECT_DIR`). If it cannot be loaded the
-  app still starts, hemoglobin scans return **HTTP 503** (never mock values),
-  and `GET /api/models/info` reports `test_inference.hemoglobin = "unavailable"`.
-- The hemoglobin model accepts **512×512 synthetic-style strip images only**
-  (one colored rectangle on white paper); other images are returned as failed
-  scans with guidance. Real phone photos are untested.
-- API docs (OpenAPI/Swagger): http://localhost:8000/docs
-- CORS origins are configured via `ALLOWED_ORIGINS` (default
-  `http://localhost:3000`).
+Backend: `http://localhost:8000`  
+Interactive API documentation: `http://localhost:8000/docs`
 
-## Run the frontend (Next.js)
+The backend requirements include the ML inference dependencies. The bundled models are loaded from `ml/aarogya-bindu-ml/models/` by default; use `ML_PROJECT_DIR` to override the ML project directory. If the hemoglobin model cannot load, the backend can still start, but hemoglobin inference returns **HTTP 503** rather than fabricated fallback values.
+
+### 3. Start the Next.js frontend
+
+In terminal 2, from the repository root:
 
 ```bash
 cd frontend
 npm install
-cp .env.example .env.local   # optional; defaults work for local dev
+cp .env.example .env.local
 npm run dev
 ```
 
-- App: http://localhost:3000
-- The backend URL is configured via `NEXT_PUBLIC_API_BASE_URL`
-  (default `http://localhost:8000`).
-- Aarogya AI (optional) needs the server-side variables described in
-  [Aarogya AI report assistant](#aarogya-ai-report-assistant). Requires Node.js ≥ 22.
+Open **http://localhost:3000**. The frontend uses `NEXT_PUBLIC_API_BASE_URL` (default `http://localhost:8000`) to contact FastAPI.
 
-Useful checks:
+### 4. Optional: enable the Cline-powered report assistant
 
-```bash
-npm run lint        # ESLint (next/core-web-vitals)
-npm run typecheck   # tsc --noEmit
-npm run build       # production build
+Set the following **server-side** values in `frontend/.env.local`:
+
+```dotenv
+CLINE_API_KEY=your_cline_api_key
+ASSISTANT_PROVIDER_ID=cline
+ASSISTANT_MODEL_ID=your_supported_model_id
+ASSISTANT_TIMEOUT_MS=30000
+BACKEND_INTERNAL_URL=http://localhost:8000
 ```
 
-## API contract
+The Cline provider uses available Cline credits and requires a configured, supported model. **Never** commit the real API key, put it in a `NEXT_PUBLIC_` variable, or expose it in the browser.
 
-| Method | Path | Status | Purpose |
-|---|---|---|---|
-| GET | `/api/health` | ✅ implemented | Liveness + inference mode (`hybrid`) |
-| GET | `/api/tests` | ✅ implemented | Metadata for hemoglobin, glucose, urine albumin |
-| GET | `/api/models/info` | ✅ implemented | Active models + per-test backend (`ml` / `mock` / `unavailable`) |
-| POST | `/api/patients` | ✅ implemented | Create fictional/demo patient |
-| POST | `/api/scans/analyze` | ✅ implemented (hemoglobin: ML; others: mock) | Multipart: `image`, `test_type`, `patient_id`; 503 if the hemoglobin model is unavailable |
-| GET | `/api/reports/{id}` | ✅ implemented | Structured report (patient, test, analysis); 404 if unknown. Report ID == screening-session ID |
-| GET | `/api/reports/{id}/pdf` | ✅ implemented | In-memory ReportLab A4 PDF (`application/pdf`, attachment) |
-| GET | `/api/patients/{id}/history` | ✅ implemented | Demo screening history |
-| GET | `/api/reports/{id}/assistant-context` | ✅ implemented | De-identified report summary used only by Aarogya AI (no name, patient ID, age, sex, IDs, timestamps or image data); 404 if unknown |
-| POST/GET | `/api/assistant` (Next.js route) | ✅ implemented | Aarogya AI question endpoint / secret-free availability status |
+For a deterministic offline assistant response (no live model call), set `ASSISTANT_PROVIDER_ID=fake`. This is a test fixture, not generative AI. If live assistant configuration is missing, the assistant panel becomes unavailable while the rest of the report continues to work.
 
-The scan-analysis response contract (Pydantic: `backend/app/schemas.py`,
-TypeScript: `frontend/lib/types.ts`) is **stable across the mock → ML
-transition** and always carries: `test_type`, `status`, `quality`,
-`measurement` (nullable), `source` (`mock`/`synthetic`/`validated`),
-`model` (identifier + version), `classification` (nullable),
-`clinically_validated`, `image_analysis`, `explanation`
-(summary/inputs/limitations/warnings), and the simulation disclaimer.
-Failed-quality scans never receive a measurement or classification.
+### 5. Development checks
 
-## ML integration boundary
+From `frontend/`:
 
-ML inference is never called from React components and never implemented
-inside API route handlers. The single seam is
-`backend/app/services/inference.py`, which routes by test type:
+```bash
+npm run lint
+npm run typecheck
+npm run build
+```
 
-- `hemoglobin` → `services/ml_hemoglobin.py`, a thin wrapper around
-  `aarogya_hb_ml.inference.predict_hemoglobin` (the OpenCV preprocessing and
-  feature extraction stay in `ml/aarogya-bindu-ml`; nothing is duplicated). It
-  maps the ML result onto `ScanAnalysisResponse` (`source="synthetic"`,
-  `model.kind="svr"`, quality metrics, ROI detection).
-- `glucose`, `urine_albumin` → `services/mock_inference.py` (unchanged).
+ML tests and training instructions are documented in [`ml/aarogya-bindu-ml/README.md`](ml/aarogya-bindu-ml/README.md). The dataset generator is documented in [`ml/aarogya_bindu_dataset_generator/README.md`](ml/aarogya_bindu_dataset_generator/README.md).
 
-The demo SVM (`models/hb_demo_svm.joblib`) takes the SVR's 30 features **plus
-the raw SVR output** (`svr_pred`), in the order stored in its bundle; its
-scaler is part of the saved pipeline. The ML package has no public SVM
-function, so `ml_hemoglobin.py` re-runs the package's public
-`preprocess` / `extract_features` / `feature_vector` once and applies the saved
-pipeline. It is strictly validated at startup (feature order, class/label
-match, artificial band names, synthetic + not-clinically-validated flags,
-trained against this exact SVR) and reported as
-`classification.method = "svm_synthetic_demo"`. Its labels are shown verbatim
-and never mapped to clinical terms.
+## How the ML pipeline works
 
-## Aarogya AI report assistant
+The **hemoglobin demonstration** uses the following stages:
 
-An "Ask Aarogya AI about this report" panel on `/results/[id]` explains the
-saved demonstration report: how the value was produced, image quality and ROI
-detection, the artificial category, model provenance, and why nothing is
-medically validated.
+1. **Synthetic dataset generation:** create artificial strip images and targets using a specified, invented color mapping, with different augmentation profiles.
+2. **Preprocessing and quality control:** detect the colored strip region and reject unsuitable images.
+3. **Feature extraction:** compute a fixed vector of **30 color-derived features**.
+4. **Regression:** load the saved, trained **RBF SVR** to estimate a *simulated hemoglobin-equivalent* value.
+5. **Demonstration classification:** use a separately trained SVM with the 30 features plus SVR output to assign one of three **artificial** bands.
+6. **Report generation:** return the estimate, provenance, image-quality information, disclaimers, and a PDF-ready explanation.
 
-**Architecture** — browser → `POST /api/assistant` (Next.js, Node.js runtime)
-→ FastAPI `GET /api/reports/{id}/assistant-context` → Cline SDK
-(`@cline/agents` `Agent`, pinned `0.0.92`) → Cline provider. The browser never
-talks to the model provider and never sees the key.
+The SVM's bands are equal-width divisions of the synthetic target range. **They are not normal/abnormal labels, anemia diagnoses, or clinical severity levels.** If the SVM is unavailable, the SVR result may still be returned with a null classification and a warning.
 
-- **Tool-free agent:** `tools: []`, `maxIterations: 1`, `maxTokens: 400`.
-  `@cline/sdk` / `ClineCore` (which include shell/file/web tools) are not used.
-- **Safety layers** (`frontend/lib/assistant/server/safety.ts`):
-  1. Diagnosis, treatment, dosing and "is this normal?" questions get a
-     fixed refusal. Urgent symptoms get a fixed "seek real-world help"
-     response. The model is not called for either.
-  2. A strict system prompt treats the report, history and question as
-     untrusted data. Envelope tags and control/bidi characters are stripped.
-  3. Every model answer is checked before it is shown. Answers are rejected
-     if they state or deny a diagnosis, give treatment or doses, attach
-     clinical severity to bands, say a value is normal, quote numbers that
-     are not in the report, or leak the prompt or a key. A fixed fallback
-     replaces rejected answers.
-  4. Every answer carries `SIMULATED — NOT FOR MEDICAL USE`.
-- **Abuse limits:** questions are capped at 500 characters, history at 6
-  turns, and the request body at 16 KB. Report IDs must be UUIDs. Rate limits
-  are 8 requests per minute per IP and 60 per minute in total. The limiter is
-  in-memory, so it is single-instance only. Requests time out after 30 s, and
-  only generic error messages are returned.
+### Synthetic evaluation results
 
-**Configuration** (`frontend/.env.local`, server-side only, never
-`NEXT_PUBLIC_`):
+The selected `svr_rbf__normalized` model was evaluated on a held-out **synthetic** test set of 83 samples:
 
-| Variable | Purpose |
-|---|---|
-| `CLINE_API_KEY` | Cline API key. Calls use your Cline credits. |
-| `ASSISTANT_PROVIDER_ID` | `cline` (live) or `fake` (deterministic offline responder: no network, no AI) |
-| `ASSISTANT_MODEL_ID` | e.g. `anthropic/claude-haiku-4.5` |
-| `ASSISTANT_TIMEOUT_MS` | Default `30000` |
-| `BACKEND_INTERNAL_URL` | FastAPI URL as seen from the Next.js server |
+| Metric | Held-out synthetic test result |
+| --- | ---: |
+| Mean absolute error (MAE) | 0.3873 simulated g/dL |
+| Root mean squared error (RMSE) | 0.5816 simulated g/dL |
+| R² | 0.9813 |
+| Predictions within ±1.0 simulated g/dL | 89.16% |
 
-If the key or model ID is missing, the panel shows an "unavailable" state
-and the rest of the report still works. Node.js 22 or later is required.
+**Interpretation:** these figures show agreement with the **synthetically generated target values only**. They do not establish performance on real test strips, smartphone photographs, or patient blood samples.
 
-**Known limitations**
+The error increases on challenging synthetic images: test MAE was **0.1189** on clean images versus **0.8060** on challenging augmentations. Blur, noise, lighting, and perspective remain important limitations. Full breakdowns and plots are available in [`ml/aarogya-bindu-ml/reports/evaluation.md`](ml/aarogya-bindu-ml/reports/evaluation.md).
 
-- **No authentication.** Anyone who has a report's random UUID can open
-  the report and ask the assistant about it, the same as with
-  `/api/reports/{id}`. Report IDs are not an access control. Use fictional
-  data only.
-- The safety checks are pattern-based and reduce risk but are not
-  exhaustive. The live model path has not been tested against a paid
-  provider in this repo; automated tests use fake models only.
-- English only.
+## Cline SDK integration: Aarogya AI
 
-## Scope guardrails
+Aarogya AI appears on the saved report page as an **“Ask Aarogya AI about this report”** panel. It answers questions about how the simulated result was produced, image quality, the artificial classification band, and model limitations.
 
-- Patient-facing only — no doctor dashboard, hospital management,
-  prescriptions, or treatment recommendations.
-- No clinical claims: synthetic data and illustrative classifications are
-  not clinically validated and are labeled as such throughout.
-- No real patient records; demo/fictional profiles only.
+```text
+Report page (browser)
+       ↓
+Next.js POST /api/assistant
+       ↓
+FastAPI GET /api/reports/{id}/assistant-context
+       ↓
+Report-grounded prompt + server-side safety checks
+       ↓
+@cline/agents Agent → Cline provider
+       ↓
+Response validation → safe answer or fixed fallback
+```
+
+The project uses **`@cline/agents` (`Agent`, pinned version `0.0.92`)**, not `@cline/sdk` / `ClineCore`. The agent is **tool-free** (`tools: []`) with `maxIterations: 1` and `maxTokens: 400`; it is not permitted to execute shell commands, access files, or browse the web. The browser never receives the Cline API key.
+
+Safety controls include fixed responses for diagnosis/treatment questions, grounded prompts, post-generation claim filtering, an always-visible simulation disclaimer, input-size limits, request timeouts, and in-memory rate limiting. These checks **reduce risk but cannot guarantee complete safety**. Automated assistant tests use fake models; the live paid-provider path has not been verified in this repository.
+
+## API overview
+
+| Method | Endpoint | Purpose |
+| --- | --- | --- |
+| GET | `/api/health` | Service health and inference mode |
+| GET | `/api/tests` | Supported test metadata |
+| GET | `/api/models/info` | Model status and ML/mock/unavailable sources |
+| POST | `/api/patients` | Create a fictional patient |
+| POST | `/api/scans/analyze` | Analyze uploaded image and save screening |
+| GET | `/api/reports/{id}` | Retrieve a saved report |
+| GET | `/api/reports/{id}/pdf` | Download PDF report |
+| GET | `/api/patients/{id}/history` | Retrieve demonstration screening history |
+| GET | `/api/reports/{id}/assistant-context` | Retrieve de-identified assistant context |
+| POST / GET | `/api/assistant` | Next.js assistant Q&A / availability |
+
+The backend reports whether a result is synthetic or mock and whether it is clinically validated. A failed-quality scan has **no measurement or classification**. The model integration boundary is `backend/app/services/inference.py`; the frontend does not run inference directly.
+
+## Current limitations and responsible use
+
+- **Synthetic-only validation:** no clinical samples, real hemoglobin measurements, or real-world diagnostic performance evidence.
+- **Restricted image input:** the hemoglobin model expects **512 × 512 synthetic-style strip images** containing one colored rectangle on white paper; real smartphone photographs are untested.
+- **No medical interpretation:** artificial SVM bands have no clinical meaning; the application does not diagnose anemia or recommend treatment.
+- **Mock tests:** glucose and urine albumin results are deterministic demonstration fixtures.
+- **No authentication:** report UUIDs are not access controls; anyone with a valid report URL may access it. **Never enter real patient data.**
+- **Assistant limitations:** English-only; pattern-based safety checks are imperfect; rate limiting is in-memory and intended for a single instance.
+- **No clinical deployment:** the prototype is not intended for healthcare decision-making.
+
+## Future work
+
+- Explore data collection protocols and validation against reference laboratory measurements, subject to appropriate approvals and safeguards.
+- Investigate calibration, lighting normalization, and more robust real-world strip detection.
+- Evaluate generalization across devices, imaging conditions, and diverse samples.
+- Replace mock tests only when appropriate trained and validated models exist.
+- Add authentication, privacy controls, and production-grade operational safeguards before any real-user deployment.
+
+---
+
+**Built for the Cline AI Builders Hackathon.**  
+**SIMULATED — NOT FOR MEDICAL USE.**
