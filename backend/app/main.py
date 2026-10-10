@@ -11,7 +11,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from . import database
 from .config import APP_NAME, APP_VERSION, allowed_origins
-from .routers import future, health, models, patients, scans, tests
+from .routers import health, models, patients, reports, scans, tests
 
 
 @asynccontextmanager
@@ -45,4 +45,4 @@ app.include_router(tests.router, prefix="/api")
 app.include_router(models.router, prefix="/api")
 app.include_router(patients.router, prefix="/api")
 app.include_router(scans.router, prefix="/api")
-app.include_router(future.router, prefix="/api")
+app.include_router(reports.router, prefix="/api")

@@ -138,3 +138,21 @@ export interface ScreeningHistoryResponse {
   entries: ScreeningHistoryEntry[];
   disclaimer: string;
 }
+
+export interface ReportPatient {
+  patient_id: string;
+  display_name: string | null;
+  age: number;
+  sex: string | null;
+}
+
+/** GET /api/reports/{id} — a saved session joined with its analysis. */
+export interface ScreeningReportResponse {
+  report_id: string;
+  scan_id: string;
+  created_at: string;
+  patient: ReportPatient;
+  test: TestMetadata;
+  analysis: ScanAnalysisResponse;
+  disclaimer: string;
+}

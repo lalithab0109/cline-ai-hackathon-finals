@@ -63,6 +63,8 @@ async def analyze_scan(
             patient_sex=patient["sex"],
         )
 
+    # The report is a rendered view over this session, so report ID == session ID.
+    result.report_id = session["id"]
     database.save_analysis(session["id"], result)
     return result
 

@@ -45,7 +45,7 @@ def get_patient_history(patient_id: str) -> ScreeningHistoryResponse:
     entries = [
         ScreeningHistoryEntry(
             scan_id=row["session_id"],
-            report_id=None,
+            report_id=row["session_id"],
             test_type=row["test_type"],
             status=row["status"],
             source=row["source"],

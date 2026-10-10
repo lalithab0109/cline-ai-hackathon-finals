@@ -17,3 +17,16 @@ body {
     linear-gradient(to bottom, rgb(13 148 136 / 0.05) 1px, transparent 1px);
   background-size: 2.5rem 2.5rem;
 }
+
+/* Print-friendly reports: drop the decorative background and shadows. */
+@media print {
+  body {
+    background: white;
+  }
+  .bg-clinical-grid {
+    background-image: none;
+  }
+  .shadow-card {
+    box-shadow: none;
+  }
+}

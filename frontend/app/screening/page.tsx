@@ -1,34 +1,30 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import DisclaimerBanner from "@/components/DisclaimerBanner";
 import Header from "@/components/Header";
 import PatientForm from "@/components/screening/PatientForm";
 import ProcessingState from "@/components/screening/ProcessingState";
-import ScanResultSummary from "@/components/screening/ScanResultSummary";
 import Stepper, { type ScreeningStep } from "@/components/screening/Stepper";
 import StripScanner from "@/components/screening/StripScanner";
 import TestSelector from "@/components/screening/TestSelector";
 import { analyzeScan } from "@/lib/api";
-import type {
-  PatientResponse,
-  ScanAnalysisResponse,
-  TestMetadata,
-} from "@/lib/types";
+import type { PatientResponse, TestMetadata } from "@/lib/types";
 
 /**
  * Guided screening journey:
- * Patient details -> Test selection -> Image upload -> Mock analysis ->
- * Saved screening session (result summary).
+ * Patient details -> Test selection -> Image upload -> Analysis ->
+ * redirect to the persisted report at /results/{scan_id}.
  *
- * All data flows through the typed API client; no inference logic or
- * hardcoded responses live in components.
+ * Both successful and failed-quality scans navigate to the results page,
+ * which fetches the saved report from the backend (no transient state).
  */
 export default function ScreeningPage() {
+  const router = useRouter();
   const [step, setStep] = useState<ScreeningStep>("patient");
   const [patient, setPatient] = useState<PatientResponse | null>(null);
   const [test, setTest] = useState<TestMetadata | null>(null);
-  const [result, setResult] = useState<ScanAnalysisResponse | null>(null);
   const [analyzeError, setAnalyzeError] = useState<string | null>(null);
 
   async function handleAnalyze(file: File) {
@@ -41,28 +37,15 @@ export default function ScreeningPage() {
         testType: test.id,
         image: file,
       });
-      setResult(response);
-      setStep("result");
+      // The scan (success or quality_failed) is persisted server-side;
+      // hand off to the report page, which fetches it by ID.
+      router.push(`/results/${response.scan_id}`);
     } catch (err) {
       setAnalyzeError(
         err instanceof Error ? err.message : "Analysis failed unexpectedly."
       );
       setStep("upload");
     }
-  }
-
-  function handleRetake() {
-    setResult(null);
-    setAnalyzeError(null);
-    setStep("upload");
-  }
-
-  function handleNewScreening() {
-    // Keep the demo patient; choose a new test and photo.
-    setTest(null);
-    setResult(null);
-    setAnalyzeError(null);
-    setStep("test");
   }
 
   return (
@@ -111,15 +94,6 @@ export default function ScreeningPage() {
 
           {step === "processing" && test && (
             <ProcessingState testName={test.name} />
-          )}
-
-          {step === "result" && result && test && (
-            <ScanResultSummary
-              result={result}
-              test={test}
-              onRetake={handleRetake}
-              onNewScreening={handleNewScreening}
-            />
           )}
         </div>
       </main>

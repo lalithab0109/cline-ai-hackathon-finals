@@ -215,3 +215,28 @@ class ScreeningHistoryResponse(BaseModel):
     patient_id: str
     entries: list[ScreeningHistoryEntry]
     disclaimer: str
+
+
+class ReportPatient(BaseModel):
+    """Minimal fictional patient context embedded in a report."""
+
+    patient_id: str
+    display_name: Optional[str] = None
+    age: int
+    sex: Optional[str] = None
+
+
+class ScreeningReportResponse(BaseModel):
+    """GET /api/reports/{id} — a saved session joined with its analysis.
+
+    The report ID is the screening-session ID: reports are a rendered view
+    over persisted scan data, not a separate record.
+    """
+
+    report_id: str
+    scan_id: str
+    created_at: str
+    patient: ReportPatient
+    test: TestMetadata
+    analysis: ScanAnalysisResponse
+    disclaimer: str

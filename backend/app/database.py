@@ -174,6 +174,49 @@ def save_analysis(session_id: str, analysis: Any) -> None:
         )
 
 
+def get_report(report_id: str) -> Optional[dict[str, Any]]:
+    """Fetch one screening session joined with its patient and analysis.
+
+    The report ID is the screening-session ID. Returns None when unknown.
+    """
+
+    with _connect() as conn:
+        row = conn.execute(
+            """
+            SELECT s.id AS session_id, s.test_type, s.status,
+                   s.created_at AS session_created_at,
+                   p.id AS patient_id, p.display_name, p.age, p.sex,
+                   a.measurement_json, a.classification_json, a.quality_json,
+                   a.image_analysis_json, a.explanation_json,
+                   a.model_identifier, a.model_version, a.source,
+                   a.is_simulated, a.clinically_validated
+            FROM screening_sessions s
+            JOIN patients p ON p.id = s.patient_id
+            LEFT JOIN analysis_results a ON a.session_id = s.id
+            WHERE s.id = ?
+            """,
+            (report_id,),
+        ).fetchone()
+
+    if row is None:
+        return None
+
+    record = dict(row)
+    for key in (
+        "measurement_json",
+        "classification_json",
+        "quality_json",
+        "image_analysis_json",
+        "explanation_json",
+    ):
+        raw = record.pop(key)
+        record[key.removesuffix("_json")] = json.loads(raw) if raw else None
+    for flag in ("is_simulated", "clinically_validated"):
+        if record[flag] is not None:
+            record[flag] = bool(record[flag])
+    return record
+
+
 def get_sessions_with_analysis(patient_id: str) -> list[dict[str, Any]]:
     """Return a patient's screening sessions joined with their analysis."""
 
